@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de Deudas</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#1b2430;--mut:#6b7785;--g:#2e9e5b;--r:#d64545;--b:#2f6fed;--bd:#e3e8ee;--w:#e8a317}
+@media(prefers-color-scheme:dark){:root{--bg:#10151b;--card:#1a222b;--tx:#e8edf2;--mut:#8b98a6;--bd:#2a3541}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);padding:12px 12px 80px;max-width:760px;margin:auto}
+h1{font-size:19px;margin:4px 0 10px}h2{font-size:15px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+nav{display:flex;gap:6px;position:sticky;top:0;background:var(--bg);padding:6px 0 10px;z-index:5}
+nav button{flex:1;background:var(--card);color:var(--mut);border:1px solid var(--bd);padding:10px 4px;font-size:13px;font-weight:600}
+nav button.on{background:var(--b);color:#fff;border-color:var(--b)}
+.sec{display:none}.sec.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi small{color:var(--mut);display:block;font-size:12px}.kpi b{font-size:18px}
+.big{font-size:30px;font-weight:700}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--g)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px;flex:1;min-width:130px}
+input,select,button{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+button{cursor:pointer;background:var(--b);color:#fff;border:0;font-weight:600}
+button.s{background:var(--bd);color:var(--tx);font-weight:500;padding:7px 11px;font-size:13px}
+button.d{background:transparent;color:var(--r);padding:4px 8px;font-size:14px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.neg{color:var(--r)}.pos{color:var(--g)}.mut{color:var(--mut);font-size:12.5px}
+.dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tag{font-size:11px;background:var(--bd);color:var(--mut);padding:2px 7px;border-radius:20px}
+.seg{display:flex;gap:6px;margin-bottom:10px}.seg button{flex:1;background:var(--bd);color:var(--tx);font-weight:500;padding:9px 4px;font-size:13px}.seg button.on{background:var(--b);color:#fff}
+.prev{background:var(--bg);border-radius:10px;padding:10px;margin:10px 0;font-size:13.5px}
+.item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);padding:8px 0;font-size:13.5px;gap:8px}
+.item:last-child{border:0}
+.res{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);gap:8px}
+.res:last-child{border:0}
+.bl{display:flex;align-items:center;gap:8px;font-size:12px;margin:3px 0}.bl span{width:62px;color:var(--mut)}.bl i{display:block;height:10px;background:var(--b);border-radius:5px;min-width:2px}
+.warn{background:rgba(232,163,23,.15);border:1px solid var(--w);border-radius:10px;padding:10px;font-size:13.5px;margin-bottom:12px}
+.kg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.kc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
+.kc small{color:var(--mut);display:block;font-size:12px}.kc b{font-size:19px;display:block;margin:2px 0}
+.kc.hero{grid-column:1/-1}.kc.hero b{font-size:30px}
+.dl{font-size:12px}
+.stack{display:flex;height:14px;border-radius:8px;overflow:hidden;margin:6px 0 10px;background:var(--bd)}
+.lg{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+svg.ch{width:100%;height:auto;display:block}
+.dual{display:grid;grid-template-columns:48px 1fr;gap:6px;align-items:center;font-size:12px;margin:6px 0}
+.dual .b{height:8px;border-radius:4px;margin:2px 0}
+dialog{border:0;border-radius:16px;padding:16px;width:min(92vw,420px);background:var(--card);color:var(--tx)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog label{margin-bottom:10px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:20}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<h1>💳 Control de Deudas</h1>
+<nav>
+  <button data-tab="panel" class="on">Panel</button>
+  <button data-tab="resumen">Deudas</button>
+  <button data-tab="mov">Movimientos</button>
+  <button data-tab="proy">Proyección</button>
+  <button data-tab="ing">Ingresos</button>
+</nav>
+
+<section class="sec on" id="tab-panel"></section>
+
+<section class="sec" id="tab-resumen">
+  <div id="setup"></div>
+  <div class="card">
+    <small class="mut">Deuda total (banco + primo + hermana)</small>
+    <div class="big neg" id="totAll"></div>
+    <div class="grid" id="kpis" style="margin-top:10px"></div>
+  </div>
+  <div id="debts"></div>
+  <button class="s" id="addDebt">+ Agregar otra deuda</button>
+</section>
+
+<section class="sec" id="tab-mov">
+  <div class="card">
+    <div class="seg" id="seg">
+      <button data-t="pago">Pagar</button>
+      <button data-t="retiro">Ruleteo</button>
+      <button data-t="ajuste">Actualizar saldo</button>
+    </div>
+    <div id="form"></div>
+  </div>
+  <div class="card"><h2>Historial</h2><div id="hist"></div></div>
+</section>
+
+<section class="sec" id="tab-proy"></section>
+
+<section class="sec" id="tab-ing">
+  <div class="card">
+    <h2>Ingreso del mes</h2>
+    <div class="row">
+      <label>Mes<input id="iMonth" type="month"></label>
+      <label>Sueldo neto sin bono<input id="iBase" type="number" step="0.01" inputmode="decimal"></label>
+      <label>Bono de guardia<input id="iBono" type="number" step="0.01" inputmode="decimal"></label>
+    </div>
+    <div class="mut" style="margin-top:6px">Se guarda solo. Si el mes es nuevo, copia el sueldo del último mes.</div>
+  </div>
+  <div class="card"><h2>Mis meses</h2><div id="incList"></div></div>
+  <div class="card">
+    <h2>Respaldo</h2>
+    <div class="mut" style="margin-bottom:8px">Los datos viven solo en este navegador. Exporta un respaldo de vez en cuando.</div>
+    <div class="row">
+      <button class="s" id="exp">Exportar</button>
+      <button class="s" id="imp">Importar</button>
+      <button class="s" id="rst" style="color:var(--r)">Borrar todo</button>
+      <input type="file" id="file" accept=".json" hidden>
+    </div>
+  </div>
+</section>
+
+<dialog id="dlg"><div id="dlgBody"></div></dialog>
+<div id="toast"></div>
+
+<script>
+const KEY='control-deudas-v2';
+const $=id=>document.getElementById(id);
+const num=v=>parseFloat(v)||0;
+const fmt=n=>'S/ '+(+n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const ym=d=>d.slice(0,7);
+const isBank=d=>d.kind==='card'||d.kind==='loan';
+const KIND={card:'Tarjeta',loan:'Préstamo banco',primo:'Primo',sister:'Hermana'};
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const mlabel=s=>MES[+s.slice(5,7)-1]+' '+s.slice(0,4);
+function addMonths(k){const d=new Date();const t=new Date(d.getFullYear(),d.getMonth()+k,1);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')}
+
+function fresh(){
+  const D=(name,kind,monthly)=>({id:uid(),name,kind,total:0,start:0,monthly:monthly||0,consumido:0,limit:0,due:''});
+  return {debts:[D('Amex Platinum','card'),D('Extra Cash','loan'),D('Préstamo primo','primo',2000),D('Deuda hermana','sister')],
+    log:[],income:[],cfg:{sueldo:0,bonoProm:0,extraMonthly:0,interest:3,fee:2,extraTo:'banco',extras:{}}};
+}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.debts){
+  // la versión anterior traía una tarjeta 'IBK Visa Access' vacía: se quita si no tiene datos
+  s.debts=s.debts.filter(d=>!(d.name==='IBK Visa Access'&&d.kind==='card'&&!d.total&&!d.consumido&&!(s.log||[]).some(e=>e.debt===d.id)));
+  return s}}catch(e){}return fresh()}
+let S=load();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se pudo guardar')}};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)}
+const dbt=id=>S.debts.find(d=>d.id===id);
+
+// ---- movimientos: cada entrada guarda su delta para poder deshacerse
+function apply(e,sg){const d=dbt(e.debt);if(!d)return;d.total+=sg*e.delta;d.consumido+=sg*(e.dc||0)}
+function addEntry(e){e.id=uid();apply(e,1);S.log.push(e)}
+function delEntry(id){
+  const e=S.log.find(x=>x.id===id);if(!e)return;
+  const all=e.grp?S.log.filter(x=>x.grp===e.grp):[e];
+  all.forEach(x=>apply(x,-1));
+  S.log=S.log.filter(x=>!all.includes(x));
+}
+
+// ---- pestañas
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+  window.scrollTo(0,0);
+}
+
+// ---- RESUMEN
+function renderResumen(){
+  const sum=f=>S.debts.filter(f).reduce((a,d)=>a+Math.max(0,d.total),0);
+  const bank=sum(isBank),primo=sum(d=>d.kind==='primo'),sis=sum(d=>d.kind==='sister');
+  const fees=S.log.reduce((a,e)=>a+(e.fee||0),0);
+  $('totAll').textContent=fmt(bank+primo+sis);
+  $('kpis').innerHTML=
+   `<div class="kpi"><small>Banco</small><b>${fmt(bank)}</b></div>
+    <div class="kpi"><small>Primo</small><b>${fmt(primo)}</b></div>
+    <div class="kpi"><small>Hermana</small><b>${fmt(sis)}</b></div>
+    <div class="kpi"><small>Comisiones pagadas</small><b class="neg">${fmt(fees)}</b></div>`;
+  $('setup').innerHTML=S.debts.every(d=>!d.total)?'<div class="warn">👋 Para empezar, toca <b>Editar</b> en cada deuda y escribe su <b>deuda total</b> (y el pago del mes).</div>':'';
+  $('debts').innerHTML=S.debts.map(d=>{
+    const tot=Math.max(0,d.total);
+    const pct=d.start>0?Math.max(0,Math.min(100,(1-tot/d.start)*100)):0;
+    const card=d.kind==='card';
+    let l1='';
+    if(card){
+      const disp=d.limit>0?` · Disponible ${fmt(d.limit-d.consumido)}`:'';
+      l1=`<div class="mut">Consumido ${fmt(d.consumido)}${disp}</div>`;
+    }
+    const vence=d.due?` · vence el ${esc(d.due)}`:'';
+    const lbl=(d.kind==='primo'||d.kind==='sister')?'Cuota mensual':'Pago del mes';
+    return `<div class="card"><div class="dh"><h2>${esc(d.name)} <span class="tag">${KIND[d.kind]}</span></h2></div>
+      <div class="dh"><span class="mut">Deuda total</span><b style="font-size:22px" class="${tot?'neg':'pos'}">${fmt(tot)}</b></div>
+      ${l1}<div class="mut">${lbl}: ${fmt(d.monthly)}${isBank(d)?vence:''}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="mut">${d.start>0?`Avance ${Math.round(pct)}% desde ${fmt(d.start)}`:'Sin deuda inicial registrada'}</div>
+      <div class="acts">
+        <button class="s" data-act="pago" data-id="${d.id}">Pagar</button>
+        ${card?`<button class="s" data-act="retiro" data-id="${d.id}">Ruleteo</button>`:''}
+        <button class="s" data-act="ajuste" data-id="${d.id}">Actualizar saldo</button>
+        <button class="s" data-act="edit" data-id="${d.id}">Editar</button>
+      </div></div>`;
+  }).join('');
+}
+
+// ---- editar deuda
+function openEdit(id){
+  const isNew=!id;
+  const d=id?dbt(id):{id:uid(),name:'',kind:'card',total:0,start:0,monthly:0,consumido:0,limit:0,due:''};
+  const card=d.kind==='card';
+  $('dlgBody').innerHTML=`<h2>${isNew?'Nueva deuda':'Editar '+esc(d.name)}</h2>
+   <label>Nombre<input id="eName" value="${esc(d.name)}"></label>
+   ${isNew?`<label>Tipo<select id="eKind"><option value="card">Tarjeta</option><option value="loan">Préstamo banco (Extra Cash)</option><option value="primo">Primo</option><option value="sister">Hermana</option></select></label>`:''}
+   <label>Deuda total (S/)<input id="eTotal" type="number" step="0.01" inputmode="decimal" value="${d.total||''}"></label>
+   <label>Pago del mes / cuota (S/)<input id="eMonthly" type="number" step="0.01" inputmode="decimal" value="${d.monthly||''}"></label>
+   <div id="eCard" style="${card||isNew?'':'display:none'}">
+     <label>Consumido (S/)<input id="eCons" type="number" step="0.01" inputmode="decimal" value="${d.consumido||''}"></label>
+     <label>Línea de crédito (opcional)<input id="eLimit" type="number" step="0.01" inputmode="decimal" value="${d.limit||''}"></label>
+   </div>
+   <label>Vence (ej. 19/10, opcional)<input id="eDue" value="${esc(d.due)}"></label>
+   <div class="row"><button id="eSave">Guardar</button><button class="s" id="eCancel">Cancelar</button>${isNew?'':'<button class="d" id="eDel">Eliminar</button>'}</div>`;
+  $('dlg').showModal();
+  $('eCancel').onclick=()=>$('dlg').close();
+  if(isNew)$('eKind').onchange=()=>{$('eCard').style.display=$('eKind').value==='card'?'':'none'};
+  $('eSave').onclick=()=>{
+    d.name=$('eName').value.trim()||'Deuda';
+    if(isNew)d.kind=$('eKind').value;
+    const nt=num($('eTotal').value);
+    d.total=nt;d.monthly=num($('eMonthly').value);d.due=$('eDue').value.trim();
+    d.consumido=d.kind==='card'?num($('eCons').value):0;d.limit=d.kind==='card'?num($('eLimit').value):0;
+    if(d.start<=0||(isNew))d.start=nt;
+    if(isNew)S.debts.push(d);
+    save();renderAll();$('dlg').close();toast('Guardado');
+  };
+  if(!isNew)$('eDel').onclick=()=>{if(confirm('¿Eliminar esta deuda y su historial?')){S.debts=S.debts.filter(x=>x.id!==d.id);S.log=S.log.filter(x=>x.debt!==d.id);save();renderAll();$('dlg').close()}};
+}
+$('addDebt').onclick=()=>openEdit(null);
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  if(b.dataset.act==='edit')return openEdit(b.dataset.id);
+  mf.type=b.dataset.act;mf.debt=b.dataset.id;renderForm();showTab('mov');
+});
+
+// ---- MOVIMIENTOS
+let mf={type:'pago',debt:''};
+$('seg').querySelectorAll('button').forEach(b=>b.onclick=()=>{mf.type=b.dataset.t;if(mf.type==='retiro')mf.debt=bestSource();renderForm()});
+// por defecto, la tarjeta que tiene la deuda (tu Amex)
+function bestSource(){const c=S.debts.filter(d=>d.kind==='card').sort((a,b)=>b.total-a.total);return c.some(x=>x.id===mf.debt)?mf.debt:(c[0]||{}).id||''}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fill]');if(!b)return;const v=(+b.dataset.fill).toFixed(2),a=$('fAmt'),i=$('fIn');if(i)i.value=v;if(a&&!num(a.value))a.value=v;prev()});
+function renderForm(){
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===mf.type));
+  const list=mf.type==='retiro'?S.debts.filter(d=>d.kind==='card'):S.debts;
+  if(!list.length){$('form').innerHTML='<div class="mut">No hay deudas que cumplan este tipo de movimiento.</div>';return}
+  if(!list.some(d=>d.id===mf.debt))mf.debt=list[0].id;
+  const d=dbt(mf.debt);
+  const opts=list.map(x=>`<option value="${x.id}" ${x.id===mf.debt?'selected':''}>${esc(x.name)}</option>`).join('');
+  let f=`<div class="row"><label>${mf.type==='retiro'?'Sacar efectivo de la tarjeta':'Deuda'}<select id="fDebt">${opts}</select></label>
+    <label>Fecha<input id="fDate" type="date" value="${todayStr()}"></label></div>`;
+  if(mf.type==='pago'){
+    f+=`<div class="row" style="margin-top:8px"><label>Monto pagado (S/)<input id="fAmt" type="number" step="0.01" inputmode="decimal"></label>
+      <label>Nota (opcional)<input id="fNote" placeholder="ej. dinero del primo"></label></div>`;
+  }else if(mf.type==='retiro'){
+    const others=S.debts.filter(x=>x.id!==mf.debt);
+    if(!S.debts.some(x=>x.id===mf.dest))mf.dest=(others.find(x=>x.kind==='loan')||[...others].filter(x=>x.monthly>0&&isBank(x)).sort((a,b)=>b.monthly-a.monthly)[0]||others[0]||{}).id||'';
+    const dest=S.debts.map(x=>`<option value="${x.id}" ${x.id===mf.dest?'selected':''}>${esc(x.name)}${x.id===mf.debt?' (la misma tarjeta)':''}${x.monthly>0?' · pago del mes '+fmt(x.monthly):''}</option>`).join('');
+    f+=`<div class="mut" style="margin:8px 0 0">Ruleteo: sacas efectivo de esta tarjeta y lo usas para pagar otra deuda (otra tarjeta, Extra Cash, etc.).</div>
+      <div class="row" style="margin-top:8px"><label>Con ese efectivo pago…<select id="fDest"><option value="">(a ninguna deuda)</option>${dest}</select></label></div>
+      <div class="row" style="margin-top:8px"><label>Efectivo a retirar (S/)<input id="fAmt" type="number" step="0.01" inputmode="decimal"></label>
+      <label>Comisión %<input id="fFee" type="number" step="0.1" inputmode="decimal" value="${S.cfg.fee}"></label></div>
+      <div class="row" style="margin-top:8px"><label>Monto que vuelvo a ingresar / pago (S/)<input id="fIn" type="number" step="0.01" inputmode="decimal" placeholder="si lo dejas vacío = lo retirado"></label></div>
+      <div class="mut">Puede ser menor al retirado (el banco no deja meter todo o descuenta). Lo no ingresado queda como deuda en la tarjeta.</div>
+      <div class="acts" id="chips"></div>
+      <div class="row" style="margin-top:8px"><label>Antes deposité a esta tarjeta (S/, opcional)<input id="fDep" type="number" step="0.01" inputmode="decimal" placeholder="ej. 11000 del primo"></label></div>`;
+  }else{
+    f+=`<div class="row" style="margin-top:8px"><label>Deuda total nueva (S/)<input id="fTotal" type="number" step="0.01" inputmode="decimal" value="${d.total||''}"></label>
+      <label>Pago del mes nuevo<input id="fMonthly" type="number" step="0.01" inputmode="decimal" value="${d.monthly||''}"></label></div>
+      ${d.kind==='card'?`<div class="row" style="margin-top:8px"><label>Consumido nuevo (S/)<input id="fCons" type="number" step="0.01" inputmode="decimal" value="${d.consumido||''}"></label></div>`:''}
+      <div class="mut" style="margin-top:6px">Úsalo para copiar lo que ves en la app del banco (los intereses cambian el total).</div>`;
+  }
+  f+=`<div class="prev" id="fPrev"></div><button id="fGo" style="width:100%">Registrar</button>`;
+  $('form').innerHTML=f;
+  $('fDebt').onchange=()=>{mf.debt=$('fDebt').value;renderForm()};
+  $('form').oninput=prev;prev();
+  $('fGo').onclick=submit;
+}
+function prev(){
+  const p=$('fPrev');if(!p)return;const d=dbt(mf.debt);if(!d)return;
+  if(mf.type==='pago'){const a=num($('fAmt').value);p.innerHTML=`Deuda de ${esc(d.name)}: ${fmt(d.total)} → <b>${fmt(Math.max(0,d.total-a))}</b>`}
+  else if(mf.type==='retiro'){
+    const a=num($('fAmt').value),fee=a*num($('fFee').value)/100,dest=dbt($('fDest').value);
+    mf.dest=$('fDest').value;
+    const dep=num($('fDep').value);
+    const pin=$('fIn').value!==''?num($('fIn').value):a;
+    const disp=d.limit>0?d.limit-d.consumido+dep:null;
+    p.innerHTML=(dep>0?`${esc(d.name)}: depósito <b class="pos">−${fmt(dep)}</b> → ${fmt(d.total-dep)}<br>`:'')+`${esc(d.name)} ${dep>0?'luego ':''}sube <b class="neg">${fmt(a+fee)}</b> (comisión ${fmt(fee)}) → ${fmt(d.total-dep+a+fee)}`+(dest?(dest.id===d.id?`<br>Con ese efectivo pagas la misma ${esc(d.name)}: baja ${fmt(pin)} → <b>${fmt(d.total-dep+a+fee-pin)}</b> <span class="mut">(neto: ${a+fee-pin>=0?'sube':'baja'} ${fmt(Math.abs(a+fee-pin))})</span>`:`<br>${esc(dest.name)} baja ${fmt(pin)} → <b class="pos">${fmt(Math.max(0,dest.total-pin))}</b>`):'')+
+      (disp!==null&&a+fee>disp?`<br><b class="neg">⚠ Te pasas de tu disponible (${fmt(disp)}).</b>`:'');
+    const ch=$('chips');
+    if(ch)ch.innerHTML=dest?[dest.monthly>0?`<button class="s" data-fill="${dest.monthly}">Pago del mes · ${fmt(dest.monthly)}</button>`:'',dest.total>0?`<button class="s" data-fill="${dest.total}">Deuda total · ${fmt(dest.total)}</button>`:''].join(''):'';
+  }else{const n=num($('fTotal').value);const diff=n-d.total;p.innerHTML=`Cambio: <b class="${diff>0?'neg':'pos'}">${diff>0?'+':''}${fmt(diff)}</b>`}
+}
+function submit(){
+  const d=dbt(mf.debt);if(!d)return;const date=$('fDate').value||todayStr();
+  if(mf.type==='pago'){
+    const a=num($('fAmt').value);if(!(a>0))return toast('Escribe un monto');
+    addEntry({debt:d.id,type:'pago',date,delta:-a,dc:d.kind==='card'?-a:0,note:$('fNote').value.trim()});
+  }else if(mf.type==='retiro'){
+    const a=num($('fAmt').value);if(!(a>0))return toast('Escribe un monto');
+    const pc=num($('fFee').value),fee=a*pc/100,grp=uid(),dest=dbt($('fDest').value);
+    S.cfg.fee=pc;
+    const dep=num($('fDep').value);
+    if(dep>0)addEntry({debt:d.id,type:'pago',date,delta:-dep,dc:-dep,grp,note:'Depósito a la tarjeta (ruleteo)'});
+    addEntry({debt:d.id,type:'retiro',date,delta:a+fee,dc:a+fee,fee,grp,note:'Retiro de efectivo'+(dest?' → '+dest.name:'')});
+    const pin=$('fIn').value!==''?num($('fIn').value):a;
+    if(dest&&pin>0)addEntry({debt:dest.id,type:'pago',date,delta:-pin,dc:dest.kind==='card'?-pin:0,grp,note:'Pagado con efectivo de '+d.name});
+  }else{
+    const n=num($('fTotal').value);
+    const cons=$('fCons')?num($('fCons').value):d.consumido;
+    addEntry({debt:d.id,type:'ajuste',date,delta:n-d.total,dc:d.kind==='card'?cons-d.consumido:0,note:'Saldo actualizado'});
+    d.monthly=num($('fMonthly').value);if(d.start<=0)d.start=n;
+  }
+  save();renderAll();toast('Registrado ✓');
+}
+function renderHist(){
+  const items=[...S.log].sort((a,b)=>b.date.localeCompare(a.date)||0).reverse().sort((a,b)=>b.date.localeCompare(a.date));
+  const label={pago:'Pago',retiro:'Retiro de efectivo',ajuste:'Saldo actualizado'};
+  $('hist').innerHTML=items.map(e=>{const d=dbt(e.debt);
+    return `<div class="item"><div><b>${esc(d?d.name:'(eliminada)')}</b> · ${label[e.type]||e.type}<div class="mut">${e.date}${e.note?' · '+esc(e.note):''}${e.fee?' · comisión '+fmt(e.fee):''}</div></div>
+      <div style="text-align:right"><b class="${e.delta<0?'pos':'neg'}">${e.delta>0?'+':''}${fmt(e.delta)}</b><br><button class="d" data-del="${e.id}">✕</button></div></div>`}).join('')||'<div class="mut">Aún no hay movimientos.</div>';
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]');if(!b)return;
+  if(confirm('¿Borrar este movimiento? La deuda vuelve a su saldo anterior.')){delEntry(b.dataset.del);save();renderAll()}
+});
+
+// ---- INGRESOS
+const incOf=i=>(i.base||0)+(i.bono||0);
+function loadMonth(){
+  const mo=$('iMonth').value;const i=S.income.find(x=>x.month===mo);
+  if(i){$('iBase').value=i.base||'';$('iBono').value=i.bono||''}
+  else{const p=[...S.income].filter(x=>x.month<mo).sort((a,b)=>b.month.localeCompare(a.month))[0];$('iBase').value=p?p.base:S.cfg.sueldo||'';$('iBono').value=''}
+}
+function saveIncome(){
+  const mo=$('iMonth').value;if(!mo)return;
+  const base=num($('iBase').value),bono=num($('iBono').value);
+  let i=S.income.find(x=>x.month===mo);
+  if(!i){if(!base&&!bono)return;i={id:uid(),month:mo};S.income.push(i)}
+  i.base=base;i.bono=bono;
+  const last=[...S.income].sort((a,b)=>b.month.localeCompare(a.month))[0];
+  if(last&&last.base)S.cfg.sueldo=last.base;
+  save();renderAll();
+}
+['iBase','iBono'].forEach(id=>$(id).addEventListener('change',saveIncome));
+$('iMonth').addEventListener('change',loadMonth);
+function renderIng(){
+  const sis=S.debts.filter(d=>d.kind==='sister').reduce((a,d)=>a+d.monthly,0);
+  const pri=S.debts.filter(d=>d.kind==='primo').reduce((a,d)=>a+d.monthly,0);
+  const list=[...S.income].sort((a,b)=>b.month.localeCompare(a.month));
+  const bonos=list.filter(i=>i.bono>0);
+  const avg=list.length?list.reduce((a,i)=>a+i.bono,0)/list.length:0;
+  $('incList').innerHTML=(list.map(i=>{const libre=incOf(i)-sis-pri;
+    return `<div class="item"><div><a href="#" data-pick="${i.month}"><b>${mlabel(i.month)}</b></a><div class="mut">Sueldo ${fmt(i.base)} + bono ${fmt(i.bono)}</div></div>
+    <div style="text-align:right"><b>${fmt(incOf(i))}</b><div class="mut">tras hermana y primo: <span class="${libre<0?'neg':'pos'}">${fmt(libre)}</span></div><button class="d" data-idel="${i.id}">✕</button></div></div>`}).join('')||'<div class="mut">Aún no registras meses.</div>')+
+    (list.length?`<div class="mut" style="margin-top:8px">Bono promedio de tus meses: <b>${fmt(avg)}</b> <button class="s" id="useAvg">Usar en la proyección</button></div>`:'');
+  const u=$('useAvg');if(u)u.onclick=()=>{S.cfg.bonoProm=Math.round(avg*100)/100;save();renderAll();toast('Bono promedio actualizado')};
+}
+document.addEventListener('click',e=>{
+  if(e.target.dataset.pick){e.preventDefault();$('iMonth').value=e.target.dataset.pick;loadMonth()}
+  if(e.target.dataset.idel){S.income=S.income.filter(i=>i.id!==e.target.dataset.idel);save();renderAll()}
+});
+
+// ---- PROYECCIÓN
+function simulate(){
+  const c=S.cfg;
+  const bank0=S.debts.filter(isBank).reduce((a,d)=>a+Math.max(0,d.total),0);
+  let P=S.debts.filter(d=>d.kind==='primo').reduce((a,d)=>a+Math.max(0,d.total),0);
+  let H=S.debts.filter(d=>d.kind==='sister').reduce((a,d)=>a+Math.max(0,d.total),0);
+  const pCuota=S.debts.filter(d=>d.kind==='primo').reduce((a,d)=>a+d.monthly,0);
+  const hCuota=S.debts.filter(d=>d.kind==='sister').reduce((a,d)=>a+d.monthly,0);
+  let B=bank0;const rows=[];const end={};let totalFee=0,exploded=false;
+  const income=num(c.sueldo)+num(c.bonoProm)+num(c.extraMonthly);
+  for(let m=1;m<=240;m++){
+    const k=addMonths(m);
+    if(B>0)B*=1+num(c.interest)/100;
+    const hPay=Math.min(H,hCuota);H-=hPay;
+    const extra=num(c.extras[k]);
+    const regP=Math.min(P,pCuota);P-=regP;
+    const extraP=c.extraTo==='primo'?Math.min(P,extra):0;P-=extraP;
+    const extraB=extra-extraP;
+    const avail=income-hPay-regP;
+    let pay=0,gap=0;
+    if(avail>=0)pay=avail;else{gap=-avail;const f=gap*num(c.fee)/100;totalFee+=f;B+=gap+f}
+    B=Math.max(0,B-pay-extraB);
+    if(m<=12)rows.push({k,B,extra,gap});
+    if(!end.bank&&B<=0&&bank0>0)end.bank=m;
+    if(!end.primo&&P<=0)end.primo=m;
+    if(!end.sister&&H<=0)end.sister=m;
+    if(B>1e8){exploded=true;break}
+    if(B<=0&&P<=0&&H<=0)break;
+  }
+  const gap1=Math.max(0,hCuota+pCuota-income);
+  return {rows,end,exploded,income,hCuota,pCuota,gap1,bank0,totalFee,Bend:B};
+}
+function renderProy(){
+  const c=S.cfg,r=simulate();
+  const when=(m,has,cuota)=>!has?'<span class="mut">sin deuda registrada</span>':m?`<b>${mlabel(addMonths(m))}</b> <span class="mut">(${m} meses)</span>`:(cuota?'<b class="neg">no termina con este ritmo</b>':'<span class="mut">pon la cuota</span>');
+  const hasP=S.debts.some(d=>d.kind==='primo'&&d.total>0),hasH=S.debts.some(d=>d.kind==='sister'&&d.total>0);
+  const exList=[];for(let m=1;m<=18;m++){const k=addMonths(m),mo=+k.slice(5);if([5,7,11,12].includes(mo))exList.push({k,lab:(mo===5||mo===11)?'CTS':'Gratificación'})}
+  const mx=Math.max(1,...r.rows.map(x=>x.B));
+  $('tab-proy').innerHTML=`
+  <div class="card"><h2>¿Cuándo termino?</h2>
+    <div class="res"><span>🏦 Banco</span><span>${when(r.end.bank,r.bank0>0,true)}</span></div>
+    <div class="res"><span>🤝 Primo</span><span>${when(r.end.primo,hasP,r.pCuota>0)}</span></div>
+    <div class="res"><span>👩 Hermana</span><span>${when(r.end.sister,hasH,r.hCuota>0)}</span></div>
+    ${r.gap1>0?`<div class="warn" style="margin:10px 0 0">Un mes normal entra ${fmt(r.income)} y las cuotas de hermana + primo son ${fmt(r.hCuota+r.pCuota)}. Faltan <b>${fmt(r.gap1)}</b> al mes: se cubren ruleteando, con comisión de ~${fmt(r.gap1*num(c.fee)/100)} al mes, y esa deuda se suma al banco.</div>`:''}
+  </div>
+  <div class="card"><h2>Deuda del banco, próximos 12 meses</h2>
+    ${r.rows.map(x=>`<div class="bl"><span>${mlabel(x.k)}</span><i style="width:${Math.max(2,x.B/mx*100)}%"></i><b>${fmt(x.B)}</b></div>`).join('')||'<div class="mut">Registra tus deudas para ver la proyección.</div>'}
+    ${r.exploded?'<div class="mut" style="margin-top:6px">Con estos números la deuda crece sin parar.</div>':''}
+  </div>
+  <div class="card"><h2>CTS y gratificación</h2>
+    <div class="mut" style="margin-bottom:8px">Escribe cuánto esperas recibir. Se aplica en ese mes a:</div>
+    <label style="margin-bottom:8px">Destino del dinero extra<select id="cExtraTo"><option value="banco" ${c.extraTo==='banco'?'selected':''}>Pagar al banco</option><option value="primo" ${c.extraTo==='primo'?'selected':''}>Pagar al primo</option></select></label>
+    ${exList.map(x=>`<label style="margin-bottom:8px">${x.lab} · ${mlabel(x.k)}<input type="number" step="0.01" inputmode="decimal" data-ex="${x.k}" value="${c.extras[x.k]||''}"></label>`).join('')}
+  </div>
+  <div class="card"><h2>Supuestos</h2>
+    <div class="row">
+      <label>Sueldo neto sin bono<input type="number" step="0.01" inputmode="decimal" id="cSueldo" value="${c.sueldo||''}"></label>
+      <label>Bono de guardia promedio<input type="number" step="0.01" inputmode="decimal" id="cBono" value="${c.bonoProm||''}"></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label>Otros aportes al mes (opcional)<input type="number" step="0.01" inputmode="decimal" id="cExtraM" value="${c.extraMonthly||''}"></label>
+      <label>Interés mensual banco %<input type="number" step="0.1" inputmode="decimal" id="cInt" value="${c.interest}"></label>
+      <label>Comisión por retiro %<input type="number" step="0.1" inputmode="decimal" id="cFee" value="${c.fee}"></label>
+    </div>
+    <div class="mut" style="margin-top:8px">El interés es un estimado: cámbialo por el real de tu app (TCEA mensual). Primero se pagan hermana y primo; lo que sobra va al banco.</div>
+  </div>`;
+  const bind=(id,key)=>$(id).onchange=()=>{S.cfg[key]=num($(id).value);save();renderProy();renderIng()};
+  bind('cSueldo','sueldo');bind('cBono','bonoProm');bind('cExtraM','extraMonthly');bind('cInt','interest');bind('cFee','fee');
+  $('cExtraTo').onchange=()=>{S.cfg.extraTo=$('cExtraTo').value;save();renderProy()};
+  document.querySelectorAll('[data-ex]').forEach(i=>i.onchange=()=>{S.cfg.extras[i.dataset.ex]=num(i.value);save();renderProy()});
+}
+
+// ---- respaldo
+$('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));a.download='control-deudas-'+todayStr()+'.json';a.click()};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.debts)throw 0;S=j;save();renderAll();toast('Importado')}catch(x){toast('Archivo inválido')}};r.readAsText(f)};
+$('rst').onclick=()=>{if(confirm('¿Borrar todos los datos?')){localStorage.removeItem(KEY);S=fresh();renderAll()}};
+
+// ---- PANEL (dashboard)
+function renderPanel(){
+  const cur=todayStr().slice(0,7);
+  const raw=S.debts.reduce((a,d)=>a+d.total,0);
+  const T=Math.max(0,raw);
+  const T0=S.debts.reduce((a,d)=>a+(d.start||0),0);
+  const avance=T0>0?Math.max(0,Math.min(100,(1-T/T0)*100)):0;
+  const sumM=(mo,f)=>S.log.filter(e=>ym(e.date)===mo&&f(e)).reduce((a,e)=>a+Math.abs(e.delta),0);
+  const pagado=sumM(cur,e=>e.type==='pago');
+  const fees=S.log.reduce((a,e)=>a+(e.fee||0),0);
+  const sis=S.debts.filter(d=>d.kind==='sister').reduce((a,d)=>a+d.monthly,0);
+  const pri=S.debts.filter(d=>d.kind==='primo').reduce((a,d)=>a+d.monthly,0);
+  const inc=S.income.find(i=>i.month===cur);
+  const ingreso=inc?incOf(inc):num(S.cfg.sueldo)+num(S.cfg.bonoProm);
+  const libre=ingreso-sis-pri;
+  const r=simulate();
+  const owing=S.debts.filter(d=>d.total>0);
+  const kinds=['bank','primo','sister'];
+  const allEnd=owing.length>0&&(r.bank0<=0||r.end.bank)&&r.end.primo!==undefined&&r.end.sister!==undefined;
+  const maxEnd=Math.max(r.end.bank||0,r.end.primo||0,r.end.sister||0);
+  const libreEn=!owing.length?'¡Sin deudas!':(allEnd&&!r.exploded?mlabel(addMonths(maxEnd)):'—');
+  const libreSub=!owing.length?'':(allEnd&&!r.exploded?`en ${maxEnd} meses`:'con el ritmo actual no termina');
+  // total al cierre de cada mes, reconstruido desde el saldo actual
+  const endOf=mo=>raw-S.log.filter(e=>ym(e.date)>mo).reduce((a,e)=>a+e.delta,0);
+  const months=[];
+  if(S.log.length){let m=ym([...S.log].sort((a,b)=>a.date.localeCompare(b.date))[0].date);while(m<=cur){months.push(m);let y=+m.slice(0,4),n=+m.slice(5,7)+1;if(n>12){n=1;y++}m=y+'-'+String(n).padStart(2,'0')}}
+  const pts=months.map(m=>({m,v:Math.max(0,endOf(m))}));
+  let delta='';
+  if(pts.length>=2){const d=pts[pts.length-1].v-pts[pts.length-2].v;delta=`<span class="dl ${d<=0?'pos':'neg'}">${d<=0?'▼':'▲'} ${fmt(Math.abs(d))} vs mes anterior</span>`}
+  let chart='<div class="mut">La gráfica aparece cuando registres movimientos en al menos 2 meses distintos.</div>';
+  if(pts.length>=2){
+    const W=300,H=110,pl=6,pr=6,pt=10,pb=20,mx=Math.max(1,...pts.map(p=>p.v)),mn=Math.min(...pts.map(p=>p.v));
+    const lo=Math.max(0,mn-(mx-mn)*0.15),span=Math.max(1,mx-lo);
+    const X=i=>pl+i*(W-pl-pr)/(pts.length-1),Y=v=>pt+(H-pt-pb)*(1-(v-lo)/span);
+    const path=pts.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
+    chart=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Deuda total por mes">
+      <path d="${path}" fill="none" stroke="var(--b)" stroke-width="2.2" stroke-linejoin="round"/>
+      ${pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" fill="var(--b)"><title>${mlabel(p.m)}: ${fmt(p.v)}</title></circle>`).join('')}
+      <text x="${pl}" y="${H-5}" font-size="9" fill="var(--mut)">${mlabel(pts[0].m)}</text>
+      <text x="${W-pr}" y="${H-5}" font-size="9" fill="var(--mut)" text-anchor="end">${mlabel(pts[pts.length-1].m)}</text></svg>
+      <div class="mut">Inicio ${fmt(pts[0].v)} → ahora ${fmt(pts[pts.length-1].v)}</div>`;
+  }
+  // composición
+  const col={bank:'#2f6fed',primo:'#e8a317',sister:'#8a5cf6'};
+  const parts=[['bank','Banco',S.debts.filter(isBank).reduce((a,d)=>a+Math.max(0,d.total),0)],
+    ['primo','Primo',S.debts.filter(d=>d.kind==='primo').reduce((a,d)=>a+Math.max(0,d.total),0)],
+    ['sister','Hermana',S.debts.filter(d=>d.kind==='sister').reduce((a,d)=>a+Math.max(0,d.total),0)]];
+  const comp=T>0?`<div class="stack">${parts.map(p=>`<div style="width:${p[2]/T*100}%;background:${col[p[0]]}"></div>`).join('')}</div>`+
+    parts.map(p=>`<div class="lg"><span><i style="background:${col[p[0]]}"></i>${p[1]}</span><span><b>${fmt(p[2])}</b> <span class="mut">${Math.round(p[2]/T*100)}%</span></span></div>`).join(''):'<div class="mut">Registra tus deudas en la pestaña Deudas.</div>';
+  // pagos vs ruleteo, últimos 6 meses
+  const last6=[];for(let k=-5;k<=0;k++)last6.push(addMonths(k));
+  const mm=last6.map(m=>({m,p:sumM(m,e=>e.type==='pago'&&!e.grp),r:sumM(m,e=>e.type==='retiro')}));
+  const mmx=Math.max(1,...mm.map(x=>Math.max(x.p,x.r)));
+  const flow=mm.some(x=>x.p||x.r)?mm.map(x=>`<div class="dual"><span class="mut">${mlabel(x.m).slice(0,3)}</span><div>
+    <div class="b" style="width:${Math.max(2,x.p/mmx*100)}%;background:var(--g)"></div>
+    <div class="b" style="width:${Math.max(2,x.r/mmx*100)}%;background:var(--r)"></div>
+    <span class="mut">pagado ${fmt(x.p)} · ruleteado ${fmt(x.r)}</span></div></div>`).join(''):'<div class="mut">Aún no hay pagos ni retiros registrados.</div>';
+  // próximos pagos
+  const due=S.debts.filter(d=>d.monthly>0&&isBank(d));
+  const dueHtml=due.length?due.map(d=>`<div class="item"><span>${esc(d.name)}${d.due?` <span class="mut">vence ${esc(d.due)}</span>`:''}</span><b>${fmt(d.monthly)}</b></div>`).join(''):'<div class="mut">Pon el pago del mes de tus tarjetas en Deudas → Editar.</div>';
+  const extrasF=Object.keys(S.cfg.extras).filter(k=>k>=cur).reduce((a,k)=>a+num(S.cfg.extras[k]),0);
+  const statusCls=libre<0?'neg':'pos';
+  $('tab-panel').innerHTML=`
+  <div class="kg">
+    <div class="kc hero"><small>Deuda total</small><b class="${T?'neg':'pos'}">${fmt(T)}</b>${delta}
+      <div class="bar"><i style="width:${avance}%"></i></div><small>Avance global ${Math.round(avance)}%${T0>0?' desde '+fmt(T0):''}</small></div>
+    <div class="kc"><small>Pagado este mes</small><b class="pos">${fmt(pagado)}</b></div>
+    <div class="kc"><small>Libre del mes</small><b class="${statusCls}">${fmt(libre)}</b><small>ingreso ${fmt(ingreso)} − hermana y primo</small></div>
+    <div class="kc"><small>Libre de deudas</small><b>${libreEn}</b><small>${libreSub}</small></div>
+    <div class="kc"><small>Comisiones pagadas</small><b class="${fees?'neg':''}">${fmt(fees)}</b><small>por retiros de efectivo</small></div>
+    ${extrasF>0?`<div class="kc"><small>CTS + gratificación previstas</small><b class="pos">${fmt(extrasF)}</b></div>`:''}
+  </div>
+  <div class="card"><h2>Deuda por mes</h2>${chart}</div>
+  <div class="card"><h2>¿A quién le debo?</h2>${comp}</div>
+  <div class="card"><h2>Pagado vs ruleteado</h2><div class="mut" style="margin-bottom:6px"><span class="pos">■</span> pagos de tu bolsillo · <span class="neg">■</span> efectivo retirado</div>${flow}</div>
+  <div class="card"><h2>Pagos del mes (banco)</h2>${dueHtml}</div>`;
+}
+function renderAll(){renderPanel();renderResumen();renderForm();renderHist();renderProy();renderIng()}
+$('iMonth').value=todayStr().slice(0,7);
+renderAll();loadMonth();
+</script>
+</body>
+</html>
